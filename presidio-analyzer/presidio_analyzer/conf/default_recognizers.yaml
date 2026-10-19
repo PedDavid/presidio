@@ -258,6 +258,62 @@ recognizers:
     enabled: false
     country_code: in
 
+  - name: PtCitizenCardRecognizer
+    supported_languages:
+    - pt
+    type: predefined
+    enabled: false
+    country_code: pt
+
+  - name: PtNifRecognizer
+    supported_languages:
+    - pt
+    type: predefined
+    enabled: false
+    country_code: pt
+
+  - name: PtNissRecognizer
+    supported_languages:
+    - pt
+    type: predefined
+    enabled: false
+    country_code: pt
+
+  - name: PtPassportRecognizer
+    supported_languages:
+    - pt
+    type: predefined
+    enabled: false
+    country_code: pt
+
+  - name: PtPhoneNumberRecognizer
+    supported_languages:
+    - pt
+    type: predefined
+    enabled: false
+    country_code: pt
+
+  - name: PtPostalCodeRecognizer
+    supported_languages:
+    - pt
+    type: predefined
+    enabled: false
+    country_code: pt
+
+  - name: PtSnsNumberRecognizer
+    supported_languages:
+    - pt
+    type: predefined
+    enabled: false
+    country_code: pt
+
+  - name: PtVehicleRegistrationRecognizer
+    supported_languages:
+    - pt
+    type: predefined
+    enabled: false
+    country_code: pt
+
   - name: EsNifRecognizer
     supported_languages: 
     - es

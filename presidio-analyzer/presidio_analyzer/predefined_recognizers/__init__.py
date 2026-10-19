@@ -84,6 +84,24 @@ from .country_specific.philippines.ph_umid_recognizer import PhUmidRecognizer
 # Poland recognizers
 from .country_specific.poland.pl_pesel_recognizer import PlPeselRecognizer
 
+# Portugal recognizers
+from .country_specific.portugal.pt_citizen_card_recognizer import (
+    PtCitizenCardRecognizer,
+)
+from .country_specific.portugal.pt_nif_recognizer import PtNifRecognizer
+from .country_specific.portugal.pt_niss_recognizer import PtNissRecognizer
+from .country_specific.portugal.pt_passport_recognizer import PtPassportRecognizer
+from .country_specific.portugal.pt_phone_number_recognizer import (
+    PtPhoneNumberRecognizer,
+)
+from .country_specific.portugal.pt_postal_code_recognizer import (
+    PtPostalCodeRecognizer,
+)
+from .country_specific.portugal.pt_sns_number_recognizer import PtSnsNumberRecognizer
+from .country_specific.portugal.pt_vehicle_registration_recognizer import (
+    PtVehicleRegistrationRecognizer,
+)
+
 # Singapore recognizers
 from .country_specific.singapore.sg_fin_recognizer import SgFinRecognizer
 from .country_specific.singapore.sg_uen_recognizer import SgUenRecognizer
@@ -270,6 +288,14 @@ __all__ = [
     "HuggingFaceNerRecognizer",
     "PhTinRecognizer",
     "PlPeselRecognizer",
+    "PtCitizenCardRecognizer",
+    "PtNifRecognizer",
+    "PtNissRecognizer",
+    "PtPassportRecognizer",
+    "PtPhoneNumberRecognizer",
+    "PtPostalCodeRecognizer",
+    "PtSnsNumberRecognizer",
+    "PtVehicleRegistrationRecognizer",
     "PhUmidRecognizer",
     "AzureAILanguageRecognizer",
     "InAadhaarRecognizer",

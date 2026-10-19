@@ -80,6 +80,19 @@ For more information, refer to the [adding new recognizers documentation](analyz
 |--- |--- |--- |
 |PL_PESEL|Polish PESEL number|Pattern match, context and checksum|
 
+### Portugal
+
+|Entity Type|Description|Detection Method|
+|--- |--- |--- |
+|PT_NIF|A Portuguese NIF/NIPC (tax identification number), 9 digits.|Pattern match, context and checksum|
+|PT_CITIZEN_CARD|A Portuguese Cartão de Cidadão document number.|Pattern match, context and checksum|
+|PT_NISS|A Portuguese NISS (social security identification number), 11 digits.|Pattern match, context and checksum|
+|PT_PASSPORT|A Portuguese passport number (one letter followed by six digits).|Pattern match and context|
+|PT_PHONE_NUMBER|A Portuguese phone number (landline or mobile), with or without the +351 country code.|Pattern match and context|
+|PT_POSTAL_CODE|A Portuguese postal code (NNNN-NNN).|Pattern match and context|
+|PT_VEHICLE_REGISTRATION|A Portuguese vehicle registration plate (matrícula).|Pattern match and context|
+|PT_SNS_NUMBER|A Portuguese SNS (national health service) user number, 9 digits.|Pattern match and context|
+
 ### Singapore
 
 |FieldType|Description|Detection Method|
