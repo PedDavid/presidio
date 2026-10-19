@@ -98,6 +98,9 @@ from .country_specific.portugal.pt_postal_code_recognizer import (
     PtPostalCodeRecognizer,
 )
 from .country_specific.portugal.pt_sns_number_recognizer import PtSnsNumberRecognizer
+from .country_specific.portugal.pt_street_address_recognizer import (
+    PtStreetAddressRecognizer,
+)
 from .country_specific.portugal.pt_vehicle_registration_recognizer import (
     PtVehicleRegistrationRecognizer,
 )
@@ -295,6 +298,7 @@ __all__ = [
     "PtPhoneNumberRecognizer",
     "PtPostalCodeRecognizer",
     "PtSnsNumberRecognizer",
+    "PtStreetAddressRecognizer",
     "PtVehicleRegistrationRecognizer",
     "PhUmidRecognizer",
     "AzureAILanguageRecognizer",

@@ -90,6 +90,7 @@ For more information, refer to the [adding new recognizers documentation](analyz
 |PT_PASSPORT|A Portuguese passport number (one letter followed by six digits).|Pattern match and context|
 |PT_PHONE_NUMBER|A Portuguese phone number (landline or mobile), with or without the +351 country code.|Pattern match and context|
 |PT_POSTAL_CODE|A Portuguese postal code (NNNN-NNN).|Pattern match and context|
+|PT_STREET_ADDRESS|A Portuguese street address (morada): street type and name, optional door number and floor, and optional postal code and locality.|Pattern match and context|
 |PT_VEHICLE_REGISTRATION|A Portuguese vehicle registration plate (matrícula).|Pattern match and context|
 |PT_SNS_NUMBER|A Portuguese SNS (national health service) user number, 9 digits.|Pattern match and context|
 

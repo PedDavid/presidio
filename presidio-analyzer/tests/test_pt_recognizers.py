@@ -2,11 +2,10 @@
 
 from pathlib import Path
 
+import presidio_analyzer
 import pytest
 import spacy
 import yaml
-
-import presidio_analyzer
 from presidio_analyzer import AnalyzerEngine, EntityRecognizer
 from presidio_analyzer.nlp_engine import NlpArtifacts
 from presidio_analyzer.predefined_recognizers import (
@@ -17,9 +16,11 @@ from presidio_analyzer.predefined_recognizers import (
     PtPhoneNumberRecognizer,
     PtPostalCodeRecognizer,
     PtSnsNumberRecognizer,
+    PtStreetAddressRecognizer,
     PtVehicleRegistrationRecognizer,
 )
 from presidio_analyzer.recognizer_registry import RecognizerRegistryProvider
+
 from tests.mocks import NlpEngineMock
 
 MAX_SCORE = EntityRecognizer.MAX_SCORE
@@ -227,6 +228,7 @@ ALL_RECOGNIZERS = [
     PtPhoneNumberRecognizer,
     PtPostalCodeRecognizer,
     PtSnsNumberRecognizer,
+    PtStreetAddressRecognizer,
     PtVehicleRegistrationRecognizer,
 ]
 
@@ -258,6 +260,12 @@ CONFIG_CASES = [
     ("PtPhoneNumberRecognizer", "PT_PHONE_NUMBER", "Telefone +351 912 345 678", 0.75),
     ("PtPostalCodeRecognizer", "PT_POSTAL_CODE", "Código postal 1100-053", 0.45),
     ("PtSnsNumberRecognizer", "PT_SNS_NUMBER", "Utente 123456789", 0.4),
+    (
+        "PtStreetAddressRecognizer",
+        "PT_STREET_ADDRESS",
+        "Morada Rua 25 de abril, n° 39, 2° B, 1075-654 Lourinhã",
+        0.65,
+    ),
     (
         "PtVehicleRegistrationRecognizer",
         "PT_VEHICLE_REGISTRATION",
@@ -313,3 +321,105 @@ def test_default_yaml_ships_all_portugal_recognizers_disabled():
     assert len(entries) == len(ALL_RECOGNIZERS)
     assert all(entry["enabled"] is False for entry in entries)
     assert all(entry["supported_languages"] == ["pt"] for entry in entries)
+
+
+_STREET = (PtStreetAddressRecognizer, "PT_STREET_ADDRESS")
+
+
+@pytest.mark.parametrize(
+    "text, expected, score",
+    [
+        (
+            "Rua 25 de abril, 1075-654 Lourinhã",
+            "Rua 25 de abril, 1075-654 Lourinhã",
+            0.3,
+        ),
+        (
+            "Rua 25 de abril, n° 39, 2° B,  1075-654 Lourinhã",
+            "Rua 25 de abril, n° 39, 2° B,  1075-654 Lourinhã",
+            0.3,
+        ),
+        (
+            "entrega na Rua 25 de abril, n° 39, 2° B, 1075-654, CARTAXO.",
+            "Rua 25 de abril, n° 39, 2° B, 1075-654, CARTAXO",
+            0.3,
+        ),
+        (
+            "Avenida da Liberdade, 200, 3.º Esq., 1250-096 Lisboa e depois",
+            "Avenida da Liberdade, 200, 3.º Esq., 1250-096 Lisboa",
+            0.3,
+        ),
+        (
+            "Rua X, n 22, 1, 2070-123 Vila Nova de Gaia tem entrega",
+            "Rua X, n 22, 1, 2070-123 Vila Nova de Gaia",
+            0.3,
+        ),
+        ("Largo do Rato, 2", "Largo do Rato, 2", 0.2),
+        ("Rua Augusta, nº 123, r/c Dto", "Rua Augusta, nº 123, r/c Dto", 0.2),
+        ("Rua Augusta 123", "Rua Augusta 123", 0.1),
+    ],
+)
+def test_when_street_address_then_detected_with_full_span(text, expected, score):
+    results = PtStreetAddressRecognizer().analyze(text, ["PT_STREET_ADDRESS"])
+    start = text.index(expected)
+    _assert_single(results, "PT_STREET_ADDRESS", start, start + len(expected), score)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "A rua é longa, 3 vezes",  # lowercase street type is ordinary prose
+        "Quinta feira, 14 de março",
+        "Quinta, 14",
+        "Rua",
+        "Rua, 12",
+        "Rua Augusta",  # no number or postal code
+        "Praça",
+        "O Largo, 2 pessoas",
+    ],
+)
+def test_when_not_a_street_address_then_not_detected(text):
+    assert PtStreetAddressRecognizer().analyze(text, ["PT_STREET_ADDRESS"]) == []
+
+
+def test_street_address_adversarial_long_input_is_fast():
+    text = "Rua " * 20000 + "a, 1 " * 10000 + ("Rua " + "a " * 5 + ", ") * 5000
+    recognizer = PtStreetAddressRecognizer()
+    recognizer.analyze(text, ["PT_STREET_ADDRESS"])
+
+
+def test_street_address_and_postal_code_overlap_in_analyzer(tmp_path):
+    """Both entities are reported; the street address covers the whole span."""
+    conf = tmp_path / "recognizers.yaml"
+    conf.write_text(
+        """
+supported_languages:
+  - pt
+recognizers:
+  - name: PtStreetAddressRecognizer
+    supported_languages:
+      - pt
+    type: predefined
+    enabled: true
+    country_code: pt
+  - name: PtPostalCodeRecognizer
+    supported_languages:
+      - pt
+    type: predefined
+    enabled: true
+    country_code: pt
+"""
+    )
+    registry = RecognizerRegistryProvider(conf_file=conf).create_recognizer_registry()
+    analyzer = AnalyzerEngine(
+        registry=registry,
+        nlp_engine=_PtNlpEngineMock(),
+        supported_languages=["pt"],
+    )
+    text = "Rua 25 de abril, n° 39, 2° B, 1075-654 Lourinhã"
+
+    results = analyzer.analyze(text, language="pt")
+
+    street = [r for r in results if r.entity_type == "PT_STREET_ADDRESS"]
+    assert [(r.start, r.end) for r in street] == [(0, len(text))]
+    assert "PT_POSTAL_CODE" in {r.entity_type for r in results}

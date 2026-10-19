@@ -314,6 +314,13 @@ recognizers:
     enabled: false
     country_code: pt
 
+  - name: PtStreetAddressRecognizer
+    supported_languages:
+    - pt
+    type: predefined
+    enabled: false
+    country_code: pt
+
   - name: EsNifRecognizer
     supported_languages: 
     - es

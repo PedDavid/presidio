@@ -7,6 +7,7 @@ from .pt_passport_recognizer import PtPassportRecognizer
 from .pt_phone_number_recognizer import PtPhoneNumberRecognizer
 from .pt_postal_code_recognizer import PtPostalCodeRecognizer
 from .pt_sns_number_recognizer import PtSnsNumberRecognizer
+from .pt_street_address_recognizer import PtStreetAddressRecognizer
 from .pt_vehicle_registration_recognizer import PtVehicleRegistrationRecognizer
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "PtPhoneNumberRecognizer",
     "PtPostalCodeRecognizer",
     "PtSnsNumberRecognizer",
+    "PtStreetAddressRecognizer",
     "PtVehicleRegistrationRecognizer",
 ]
