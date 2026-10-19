@@ -1,0 +1,112 @@
+# Fork-only: build presidio-analyzer from any ref and publish it to the fork's
+# GitHub Container Registry, with Portuguese (pt) support enabled, for testing.
+# Not part of upstream; do not include in pull requests to microsoft/presidio.
+name: Fork - publish analyzer image
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or SHA to build
+        default: ccr-0bb5e487-z4i1wu
+        required: true
+      tag:
+        description: Image tag to publish
+        default: pt-lab
+        required: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      REF: ${{ inputs.ref }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.0
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Generate lab configuration (en + pt, Portugal recognizers enabled)
+        working-directory: presidio-analyzer
+        run: |
+          mkdir -p conf_lab
+          cat > conf_lab/nlp.yaml <<'EOF'
+          nlp_engine_name: spacy
+          models:
+            - lang_code: en
+              model_name: en_core_web_sm
+            - lang_code: pt
+              model_name: pt_core_news_sm
+          ner_model_configuration:
+            model_to_presidio_entity_mapping:
+              PER: PERSON
+              PERSON: PERSON
+              LOC: LOCATION
+              GPE: LOCATION
+              FAC: LOCATION
+              LOCATION: LOCATION
+              DATE: DATE_TIME
+              TIME: DATE_TIME
+            low_confidence_score_multiplier: 0.4
+            labels_to_ignore:
+              - ORGANIZATION
+              - ORG
+              - MISC
+          EOF
+          cat > conf_lab/analyzer.yaml <<'EOF'
+          supported_languages:
+            - en
+            - pt
+          default_score_threshold: 0
+          EOF
+          python3 - <<'EOF'
+          import yaml
+
+          src = "presidio_analyzer/conf/default_recognizers.yaml"
+          conf = yaml.safe_load(open(src, encoding="utf-8"))
+          conf["supported_languages"] = ["en", "pt"]
+          enabled = 0
+          for rec in conf["recognizers"]:
+              if rec.get("country_code") == "pt":
+                  rec["enabled"] = True
+                  enabled += 1
+          assert enabled, "no Portugal recognizers found in this ref"
+          print(f"enabled {enabled} Portugal recognizers")
+          yaml.safe_dump(
+              conf,
+              open("conf_lab/recognizers.yaml", "w", encoding="utf-8"),
+              allow_unicode=True,
+              sort_keys=False,
+          )
+          EOF
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Log in to GitHub Container Registry
+        env:
+          ACTOR: ${{ github.actor }}
+          TOKEN: ${{ github.token }}
+        run: echo "$TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+
+      - name: Build and push presidio-analyzer
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          owner="${OWNER,,}"
+          image="ghcr.io/${owner}/presidio-analyzer"
+          docker buildx build \
+            --platform linux/amd64 \
+            --build-arg NLP_CONF_FILE=conf_lab/nlp.yaml \
+            --build-arg ANALYZER_CONF_FILE=conf_lab/analyzer.yaml \
+            --build-arg RECOGNIZER_REGISTRY_CONF_FILE=conf_lab/recognizers.yaml \
+            --tag "${image}:${TAG}" \
+            --push \
+            ./presidio-analyzer
+          echo "Published ${image}:${TAG} (built from ${REF})" >> "$GITHUB_STEP_SUMMARY"
