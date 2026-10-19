@@ -14,6 +14,10 @@ on:
         description: Image tag to publish
         default: pt-lab
         required: true
+      pt_model:
+        description: spaCy Portuguese model (pt_core_news_sm, _md or _lg)
+        default: pt_core_news_md
+        required: true
 
 permissions:
   contents: read
@@ -25,6 +29,7 @@ jobs:
     env:
       REF: ${{ inputs.ref }}
       TAG: ${{ inputs.tag }}
+      PT_MODEL: ${{ inputs.pt_model }}
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.0
@@ -35,6 +40,10 @@ jobs:
       - name: Generate lab configuration (en + pt, Portugal recognizers enabled)
         working-directory: presidio-analyzer
         run: |
+          case "$PT_MODEL" in
+            pt_core_news_sm|pt_core_news_md|pt_core_news_lg) ;;
+            *) echo "Unsupported pt_model: $PT_MODEL" >&2; exit 1 ;;
+          esac
           mkdir -p conf_lab
           cat > conf_lab/nlp.yaml <<'EOF'
           nlp_engine_name: spacy
@@ -42,7 +51,7 @@ jobs:
             - lang_code: en
               model_name: en_core_web_sm
             - lang_code: pt
-              model_name: pt_core_news_sm
+              model_name: PT_MODEL_PLACEHOLDER
           ner_model_configuration:
             model_to_presidio_entity_mapping:
               PER: PERSON
@@ -59,6 +68,7 @@ jobs:
               - ORG
               - MISC
           EOF
+          sed -i "s/PT_MODEL_PLACEHOLDER/${PT_MODEL}/" conf_lab/nlp.yaml
           cat > conf_lab/analyzer.yaml <<'EOF'
           supported_languages:
             - en
